@@ -32,6 +32,7 @@ function renderbarchart(containerid, counts) {
     })
   );
 
+  // Scale every bar against the busiest resource so the chart stays easy to compare.
   container.innerHTML = entries
     .map(function (e) {
       const percent = maxvalue === 0 ? 0 : Math.round((e.value / maxvalue) * 100);
@@ -82,6 +83,7 @@ function renderaudittable() {
     return haystack.indexOf(search) !== -1;
   });
 
+  // Search the combined row text so users can find an actor, action, or detail in one box.
   if (entries.length === 0) {
     body.innerHTML = '<tr><td colspan="4" class="emptystate">No audit entries match your search.</td></tr>';
     return;

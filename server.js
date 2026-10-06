@@ -171,6 +171,7 @@ const defaultState = {
   role: 'community'
 };
 
+// Keep the file-backed API useful even when the data directory has not been created yet.
 function ensureDataFile() {
   fs.mkdirSync(dataDir, { recursive: true });
   if (!fs.existsSync(dataFile)) {
@@ -236,6 +237,7 @@ app.post('/api/state', (req, res) => {
   res.status(200).json(written);
 });
 
+// These small endpoints mirror the browser flows and are handy for API clients too.
 app.post('/api/bookings', (req, res) => {
   const booking = req.body || {};
 
