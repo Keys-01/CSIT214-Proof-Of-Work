@@ -1,4 +1,5 @@
 :root {
+  /* A small token set keeps the prototype consistent without a build-time design system. */
   --color-navy: #0b3d63;
   --color-steel: #0f4c75;
   --color-steel-light: #3d7ba8;
@@ -94,6 +95,7 @@ a {
 }
 
 .sitenav {
+  /* The dark header gives every page the same visual anchor. */
   background: var(--color-navy);
   color: #fff;
 }
