@@ -260,3 +260,114 @@ function defaultAuditLog() {
     }
   ];
 }
+
+function getBookings() {
+  return readjson(STORAGEKEYS.bookings, []);
+}
+
+function saveBookings(list) {
+  writejson(STORAGEKEYS.bookings, list);
+}
+
+function getMaintenanceTasks() {
+  return readjson(STORAGEKEYS.maintenanceTasks, []);
+}
+
+function saveMaintenanceTasks(list) {
+  writejson(STORAGEKEYS.maintenanceTasks, list);
+}
+
+function getClosures() {
+  return readjson(STORAGEKEYS.closures, []);
+}
+
+function saveClosures(list) {
+  writejson(STORAGEKEYS.closures, list);
+}
+
+function getAuditLog() {
+  return readjson(STORAGEKEYS.auditLog, []);
+}
+
+function addAuditEntry(actor, action, details) {
+  const log = getAuditLog();
+  log.unshift({
+    id: "a" + Date.now(),
+    timestamp: new Date().toISOString(),
+    actor: actor,
+    action: action,
+    details: details
+  });
+  writejson(STORAGEKEYS.auditLog, log);
+}
+
+function getRole() {
+  return localStorage.getItem(STORAGEKEYS.role) || "community";
+}
+
+function setRole(role) {
+  localStorage.setItem(STORAGEKEYS.role, role);
+  syncStateToBackend();
+}
+
+function isactiveclosure(closure, today) {
+  return Boolean(
+    closure &&
+    closure.startDate &&
+    closure.endDate &&
+    closure.startDate <= today &&
+    closure.endDate >= today
+  );
+}
+
+function refreshallresourcestatuses() {
+  const resources = getResources();
+  const closures = getClosures();
+  const maintenanceTasks = getMaintenanceTasks();
+  const today = new Date().toISOString().slice(0, 10);
+
+  resources.forEach(function (resource) {
+    const isclosed = closures.some(function (closure) {
+      return closure.resourceId === resource.id && isactiveclosure(closure, today);
+    });
+    const isundermaintenance = maintenanceTasks.some(function (task) {
+      return task.resourceId === resource.id && task.status !== "resolved";
+    });
+
+    resource.status = isclosed ? "closed" : isundermaintenance ? "maintenance" : "available";
+  });
+
+  localStorage.setItem(STORAGEKEYS.resources, JSON.stringify(resources));
+}
+
+const dataReady = initdata();
+
+async function initdata() {
+  try {
+    await syncStateFromBackend();
+  } catch (e) {
+    // Ignore sync failures; the app can still seed localStorage directly.
+  }
+
+  if (!localStorage.getItem(STORAGEKEYS.resources)) {
+    writejson(STORAGEKEYS.resources, defaultResources());
+  }
+  if (!localStorage.getItem(STORAGEKEYS.bookings)) {
+    writejson(STORAGEKEYS.bookings, defaultBookings());
+  }
+  if (!localStorage.getItem(STORAGEKEYS.maintenanceTasks)) {
+    writejson(STORAGEKEYS.maintenanceTasks, defaultMaintenanceTasks());
+  }
+  if (!localStorage.getItem(STORAGEKEYS.closures)) {
+    writejson(STORAGEKEYS.closures, defaultClosures());
+  }
+  if (!localStorage.getItem(STORAGEKEYS.auditLog)) {
+    writejson(STORAGEKEYS.auditLog, defaultAuditLog());
+  }
+  if (!localStorage.getItem(STORAGEKEYS.role)) {
+    localStorage.setItem(STORAGEKEYS.role, "community");
+  }
+
+  refreshallresourcestatuses();
+  syncStateToBackend();
+}
