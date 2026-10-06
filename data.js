@@ -7,6 +7,7 @@ const STORAGEKEYS = {
   role: "councilrole"
 };
 
+// localStorage is the quick local source of truth; the API syncs in the background when available.
 function readjson(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -81,6 +82,7 @@ function writejson(key, value) {
 }
 
 function defaultResources() {
+  // These examples make the prototype useful on the very first visit.
   return [
     {
       id: "r1",

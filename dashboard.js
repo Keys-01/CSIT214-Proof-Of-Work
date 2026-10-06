@@ -17,6 +17,7 @@ function renderdashboard() {
 
   let stats = [];
 
+  // Staff get operational numbers; community members get the things they care about when booking.
   if (role === "staff") {
     intro.textContent = "Overview of council facilities, bookings, and maintenance.";
 

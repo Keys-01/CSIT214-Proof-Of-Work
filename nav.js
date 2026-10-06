@@ -8,6 +8,7 @@ function renderNav() {
   const role = getRole();
   const current = pagename();
 
+  // Keep the menu honest about what the current role can actually do.
   const links = [
     { href: "index.html", label: "Dashboard", roles: ["community", "staff"] },
     { href: "facilities.html", label: "Find a Facility", roles: ["community", "staff"] },

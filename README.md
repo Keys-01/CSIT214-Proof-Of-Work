@@ -1,5 +1,6 @@
 # Riverbend Council Facility Booking System
 
+<!-- A small prototype, but it still tries to cover the whole booking journey. -->
 A frontend-only prototype for managing council facilities, rooms, and equipment: searching and checking availability, requesting and approving bookings, detecting conflicts, cancelling bookings, reporting and assigning maintenance, scheduling temporary closures, and viewing utilisation reports and audit history.
 
 This is a university assignment prototype (CSIT214 IT Project Management) for a fictional council, "Riverbend Council". It is built with plain HTML, CSS, and JavaScript — no framework, no build step, no backend. All data is seeded into the browser's `localStorage` on first load and persists across reloads.
