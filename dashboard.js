@@ -68,3 +68,7 @@ function renderdashboard() {
     })
     .join("");
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  dataReady.then(renderdashboard);
+});
