@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Maintenance - Riverbend Council Facilities</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <div id="sitenav"></div>
+      <main class="main">
+        <div class="container">
+          <h1>Maintenance</h1>
+          <p class="subtitle">Report a maintenance issue, and track its progress.</p>
+
+          <div id="confirmmessage"></div>
+
+          <h2>Report an Issue</h2>
+          <form id="maintenanceform">
+            <div class="formrow">
+              <div>
+                <label for="resourceselect">Resource</label>
+                <select id="resourceselect" required></select>
+              </div>
+              <div>
+                <label for="priorityinput">Priority</label>
+                <select id="priorityinput" required>
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+            <div class="formrow">
+              <div>
+                <label for="reportedbyinput">Your name</label>
+                <input type="text" id="reportedbyinput" required />
+              </div>
+            </div>
+            <div>
+              <label for="descriptioninput">Description</label>
+              <input type="text" id="descriptioninput" required />
+            </div>
+            <button type="submit" class="btn btnprimary">Submit report</button>
+          </form>
+
+          <div id="myreportssection">
+            <h2>My Reports</h2>
+            <div class="tablewrap">
+              <table id="myreportstable">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Description</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="myreportsbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="taskqueuesection">
+            <h2>Task Queue</h2>
+            <div class="tablewrap">
+              <table id="taskqueuetable">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Description</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Assigned to</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="taskqueuebody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="nav.js"></script>
+    <script src="maintenance.js"></script>
+  </body>
+</html>
