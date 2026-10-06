@@ -52,6 +52,7 @@ function updateResourceMaintenanceStatus(resourceid) {
     return task.resourceId === resourceid && task.status !== "resolved";
   });
 
+  // Once a closure is ruled out, an open task is enough to mark the resource unavailable.
   setresourcestatus(resourceid, hasOpenMaintenance ? "maintenance" : "available");
 }
 
@@ -142,6 +143,7 @@ function handlemaintenancesubmit(event) {
 
   const tasks = getMaintenanceTasks();
   tasks.push(task);
+  // Updating the resource here keeps facility search results in sync with the report.
   saveMaintenanceTasks(tasks);
   updateResourceMaintenanceStatus(resourceid);
   addAuditEntry(reportedby, "maintenance_reported", "Reported an issue with " + resourcename(resourceid));

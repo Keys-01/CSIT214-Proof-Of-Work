@@ -55,6 +55,7 @@ function filteredresources() {
   const capacity = document.getElementById("capacityinput").value;
   const mincapacity = capacity === "" ? 0 : Number(capacity);
 
+  // Each filter is optional; leaving one blank simply lets everything through.
   return getResources().filter(function (r) {
     const matchessearch = search === "" || r.name.toLowerCase().indexOf(search) !== -1;
     const matchestype = type === "" || r.type === type;
@@ -100,6 +101,7 @@ function renderresourcelist() {
         "</button>"
       );
     })
+      // Build a simple month grid from scratch so it always reflects today's month.
     .join("");
 
   const buttons = list.querySelectorAll(".resourceitem");

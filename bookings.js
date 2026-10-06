@@ -6,6 +6,7 @@ function resourcename(resourceid) {
 }
 
 function overlaps(a, b) {
+  // Times are stored as HH:MM, so string comparison works in chronological order.
   return a.resourceId === b.resourceId && a.date === b.date && a.startTime < b.endTime && b.startTime < a.endTime;
 }
 
@@ -91,6 +92,7 @@ function handlebookingsubmit(event) {
 
   const bookings = getBookings();
   bookings.push(booking);
+  // Save first so the conflict check also sees the request that was just made.
   saveBookings(bookings);
   addAuditEntry(requestedby, "booking_requested", "Requested booking of " + resourcename(resourceid) + " on " + date);
 

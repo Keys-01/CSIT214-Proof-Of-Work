@@ -77,6 +77,7 @@ function refreshresourcestatefromclosures(resourceid) {
     return task.resourceId === resourceid && task.status !== "resolved";
   });
 
+  // A closure wins over maintenance because it is the more restrictive state.
   if (hasactiveclosure) {
     setresourcestatus(resourceid, "closed");
     return;
@@ -145,6 +146,7 @@ function handleclosuresubmit(event) {
 
   const affectedbookingids = findaffectedbookingids(resourceid, startdate, enddate);
 
+  // Keep the affected IDs on the closure so staff can act on them later.
   const closure = {
     id: "c" + Date.now(),
     resourceId: resourceid,
