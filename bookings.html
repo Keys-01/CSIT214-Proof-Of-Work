@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bookings - Riverbend Council Facilities</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <div id="sitenav"></div>
+      <main class="main">
+        <div class="container">
+          <h1>Bookings</h1>
+          <p class="subtitle">Request a booking, and manage existing bookings.</p>
+
+          <div id="confirmmessage"></div>
+
+          <h2>Request a Booking</h2>
+          <form id="bookingform">
+            <div class="formrow">
+              <div>
+                <label for="resourceselect">Resource</label>
+                <select id="resourceselect" required></select>
+              </div>
+              <div>
+                <label for="dateinput">Date</label>
+                <input type="date" id="dateinput" required />
+              </div>
+            </div>
+            <div class="formrow">
+              <div>
+                <label for="starttimeinput">Start time</label>
+                <input type="time" id="starttimeinput" required />
+              </div>
+              <div>
+                <label for="endtimeinput">End time</label>
+                <input type="time" id="endtimeinput" required />
+              </div>
+            </div>
+            <div class="formrow">
+              <div>
+                <label for="requestedbyinput">Your name</label>
+                <input type="text" id="requestedbyinput" required />
+              </div>
+              <div>
+                <label for="purposeinput">Purpose</label>
+                <input type="text" id="purposeinput" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btnprimary">Submit request</button>
+          </form>
+
+          <div id="mybookingssection">
+            <h2>My Bookings</h2>
+            <div class="tablewrap">
+              <table id="mybookingstable">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="mybookingsbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="approvalssection">
+            <h2>Approvals</h2>
+            <div class="tablewrap">
+              <table id="approvalstable">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Requested by</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Purpose</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="approvalsbody"></tbody>
+              </table>
+            </div>
+
+            <h2>All Bookings</h2>
+            <div class="tablewrap">
+              <table id="allbookingstable">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Requested by</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="allbookingsbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="nav.js"></script>
+    <script src="bookings.js"></script>
+  </body>
+</html>
