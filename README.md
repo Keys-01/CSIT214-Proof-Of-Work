@@ -1,9 +1,9 @@
-# Riverbend Council Facility Booking System
+# CoastLink Council Facility Booking System
 
 <!-- A small prototype, but it still tries to cover the whole booking journey. -->
-A frontend-only prototype for managing council facilities, rooms, and equipment: searching and checking availability, requesting and approving bookings, detecting conflicts, cancelling bookings, reporting and assigning maintenance, scheduling temporary closures, and viewing utilisation reports and audit history.
+A frontend-only prototype for managing council facilities, rooms, and equipment: searching and checking availability, requesting and approving bookings, detecting conflicts, cancelling bookings, reporting and assigning maintenance, scheduling temporary closures, and viewing the audit history.
 
-This is a university assignment prototype (CSIT214 IT Project Management) for a fictional council, "Riverbend Council". It is built with plain HTML, CSS, and JavaScript — no framework, no build step, no backend. All data is seeded into the browser's `localStorage` on first load and persists across reloads.
+This is a university assignment prototype (CSIT214 IT Project Management) for a fictional council, "CoastLink Council". It is built with plain HTML, CSS, and JavaScript — no framework, no build step, no backend. All data is seeded into the browser's `localStorage` on first load and persists across reloads.
 
 ## Running it
 
@@ -14,7 +14,7 @@ Open `index.html` directly in a web browser (double-click the file, or open it f
 There is no real login system. A role switcher in the top navigation bar lets you view the app as either:
 
 - **Community Member** — search facilities, check availability, submit booking requests, view and cancel bookings, report maintenance issues.
-- **Council Staff** — everything above, plus: approve/reject booking requests, assign and update maintenance tasks, schedule temporary closures and manage affected bookings, and view utilisation reports and audit history.
+- **Council Staff** — everything above, plus: approve/reject booking requests, assign and update maintenance tasks, schedule temporary closures and manage affected bookings, and view the audit history.
 
 Switching roles reloads the page and changes which pages appear in the navigation bar — the Closures and Reports pages only appear once you've switched to Council Staff.
 
@@ -25,7 +25,7 @@ Switching roles reloads the page and changes which pages appear in the navigatio
 - `bookings.html` — Submit a booking request (with conflict detection), view and cancel your bookings, or (staff) approve/reject pending requests.
 - `maintenance.html` — Report a maintenance issue, or (staff) assign and track maintenance tasks through to resolution.
 - `closures.html` — (Staff) schedule a temporary closure for a resource and manage any bookings affected by it.
-- `reports.html` — (Staff) utilisation charts and a searchable audit history of every booking, maintenance, and closure action.
+- `reports.html` — (Staff) a searchable audit history of every booking, maintenance, and closure action.
 
 ## Data
 

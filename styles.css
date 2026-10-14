@@ -474,6 +474,78 @@ textarea {
   font-weight: 600;
 }
 
+.calendarday.closed {
+  background: #f5c6c6;
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.calendarday.maintenance {
+  background: #fdeba8;
+  color: #854d0e;
+  font-weight: 600;
+}
+
+.calendarlegend {
+  display: flex;
+  gap: var(--spacing3);
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing4);
+}
+
+.legendswatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+  background: var(--color-bg);
+}
+
+.legendswatch.closed {
+  background: #f5c6c6;
+}
+
+.legendswatch.maintenance {
+  background: #fdeba8;
+}
+
+.legendswatch.booked {
+  background: var(--color-info-bg);
+}
+
+.calendarday.past {
+  opacity: 0.45;
+}
+
+.calendarday.selectable {
+  cursor: pointer;
+}
+
+.calendarday.selectable:hover {
+  outline: 2px solid var(--color-steel);
+}
+
+.calendarday.selected {
+  background: var(--color-steel);
+  color: #fff;
+  font-weight: 700;
+}
+
+.legendswatch.selected {
+  background: var(--color-steel);
+}
+
+.selecteddate {
+  padding: 8px 10px;
+  border: 1px solid #d6dde4;
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
 .calendarday.today {
   border: 2px solid var(--color-steel);
 }
