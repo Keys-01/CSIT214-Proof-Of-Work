@@ -30,7 +30,7 @@ function renderNav() {
 
   const html =
     '<div class="navinner">' +
-    '<a class="navbrand" href="index.html">Riverbend Council &middot; Facilities</a>' +
+    '<a class="navbrand" href="index.html">CoastLink Council &middot; Facilities</a>' +
     '<ul class="navlinks">' +
     linkshtml +
     "</ul>" +
@@ -54,8 +54,10 @@ function renderNav() {
   const buttons = nav.querySelectorAll(".rolebutton");
   buttons.forEach(function (button) {
     button.addEventListener("click", function () {
-      setRole(button.getAttribute("data-role"));
-      window.location.reload();
+      // Wait for the role to reach the server, then land on the dashboard for the new role.
+      Promise.resolve(setRole(button.getAttribute("data-role"))).then(function () {
+        window.location.href = "index.html";
+      });
     });
   });
 }

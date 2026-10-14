@@ -1,7 +1,7 @@
 {
-  "name": "riverbend-council-backend",
+  "name": "coastlink-council-backend",
   "version": "1.0.0",
-  "description": "Backend API for the Riverbend Council facilities app",
+  "description": "Backend API for the CoastLink Council facilities app",
   "main": "server.js",
   "type": "module",
   "scripts": {

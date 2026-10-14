@@ -1,4 +1,6 @@
 let selectedresourceid = null;
+let selecteddate = null;
+let calendaroffset = 0;
 
 function populatelocations() {
   const select = document.getElementById("locationinput");
@@ -84,12 +86,12 @@ function renderresourcelist() {
         r.id +
         '">' +
         '<div class="resourcename">' +
-        r.name +
+        escapehtml(r.name) +
         "</div>" +
         '<div class="resourcemeta">' +
         typelabel(r.type) +
         " &middot; " +
-        r.location +
+        escapehtml(r.location) +
         " &middot; Capacity " +
         r.capacity +
         "</div>" +
@@ -121,40 +123,56 @@ function todaystring() {
   return d.getFullYear() + "-" + mm + "-" + dd;
 }
 
-function renderdetailpanel() {
-  const panel = document.getElementById("detailpanel");
-
-  if (!selectedresourceid) {
-    panel.innerHTML = '<div class="emptystate">Select a resource to see its details and availability.</div>';
-    return;
-  }
-
-  const resource = getResources().filter(function (r) {
+function selectedresource() {
+  return getResources().filter(function (r) {
     return r.id === selectedresourceid;
   })[0];
+}
+
+function renderdetailpanel() {
+  const panel = document.getElementById("detailpanel");
+  const resource = selectedresourceid ? selectedresource() : null;
 
   if (!resource) {
     panel.innerHTML = '<div class="emptystate">Select a resource to see its details and availability.</div>';
     return;
   }
 
-  const bookings = getBookings().filter(function (b) {
-    return b.resourceId === resource.id && (b.status === "approved" || b.status === "pending");
-  });
+  // Each resource starts on the current month with no day chosen.
+  selecteddate = null;
+  calendaroffset = 0;
 
-  const bookinglinkhtml =
-    resource.status === "available"
-      ? '<p><a class="btn btnprimary" href="bookings.html?resource=' + resource.id + '">Request this booking</a></p>'
-      : "";
+  const bookable = resource.status === "available";
+  const bookingformhtml = bookable
+    ? "<h3>Request a booking</h3>" +
+      '<p class="resourcemeta">Click a day on the calendar to choose the date.</p>' +
+      '<div id="bookingmessage"></div>' +
+      '<form id="bookingform">' +
+      '<div class="formrow">' +
+      '<div><label>Selected date</label><div id="selecteddatelabel" class="selecteddate">No day selected</div></div>' +
+      "</div>" +
+      '<div class="formrow">' +
+      '<div><label for="starttimeinput">Start time</label><input type="time" id="starttimeinput" required /></div>' +
+      '<div><label for="endtimeinput">End time</label><input type="time" id="endtimeinput" required /></div>' +
+      "</div>" +
+      '<div class="formrow">' +
+      '<div><label for="requestedbyinput">Your name</label><input type="text" id="requestedbyinput" required /></div>' +
+      '<div><label for="purposeinput">Purpose</label><input type="text" id="purposeinput" required /></div>' +
+      "</div>" +
+      '<button type="submit" class="btn btnprimary">Submit request</button>' +
+      "</form>"
+    : '<p class="errormessage">This resource cannot be booked right now because it is ' +
+      (resource.status === "closed" ? "closed" : "under maintenance") +
+      ".</p>";
 
   panel.innerHTML =
     "<h2>" +
-    resource.name +
+    escapehtml(resource.name) +
     "</h2>" +
     '<p class="resourcemeta">' +
     typelabel(resource.type) +
     " &middot; " +
-    resource.location +
+    escapehtml(resource.location) +
     " &middot; Capacity " +
     resource.capacity +
     "</p>" +
@@ -163,16 +181,123 @@ function renderdetailpanel() {
     '">' +
     statuslabel(resource.status) +
     "</span>" +
-    bookinglinkhtml +
     "<p>" +
-    resource.description +
+    escapehtml(resource.description) +
     "</p>" +
     '<div id="calendarcontainer"></div>' +
+    bookingformhtml +
     "<h3>Upcoming bookings</h3>" +
     '<ul class="bookinglist" id="bookinglist"></ul>';
 
-  rendercalendar(bookings);
+  refreshcalendarandlist();
+
+  const form = document.getElementById("bookingform");
+  if (form) {
+    form.addEventListener("submit", handlebookingsubmit);
+  }
+}
+
+function resourcebookings(resourceid) {
+  return getBookings().filter(function (b) {
+    return b.resourceId === resourceid && (b.status === "approved" || b.status === "pending");
+  });
+}
+
+function refreshcalendarandlist() {
+  const resource = selectedresource();
+  if (!resource) {
+    return;
+  }
+  const bookings = resourcebookings(resource.id);
+  rendercalendar(bookings, resource.id);
   renderbookinglist(bookings);
+}
+
+function showbookingmessage(text, iswarning) {
+  const box = document.getElementById("bookingmessage");
+  if (box) {
+    box.innerHTML = '<div class="' + (iswarning ? "errormessage" : "confirmmessage") + '">' + text + "</div>";
+  }
+}
+
+function handlebookingsubmit(event) {
+  event.preventDefault();
+
+  const resource = selectedresource();
+  const starttime = document.getElementById("starttimeinput").value;
+  const endtime = document.getElementById("endtimeinput").value;
+  const requestedby = document.getElementById("requestedbyinput").value.trim();
+  const purpose = document.getElementById("purposeinput").value.trim();
+
+  if (!resource) {
+    return;
+  }
+  if (!selecteddate) {
+    showbookingmessage("Please click a day on the calendar first.", true);
+    return;
+  }
+  if (!starttime || !endtime || !requestedby || !purpose) {
+    showbookingmessage("Please fill in every field before submitting.", true);
+    return;
+  }
+  if (endtime <= starttime) {
+    showbookingmessage("End time must be after start time.", true);
+    return;
+  }
+  if (selecteddate < todaystring()) {
+    showbookingmessage("You cannot book a day in the past.", true);
+    return;
+  }
+
+  const closure = findclosureondate(resource.id, selecteddate);
+  if (closure) {
+    showbookingmessage(
+      escapehtml(resource.name) + " is closed from " + closure.startDate + " to " + closure.endDate + " (" + escapehtml(closure.reason) + "). Please choose another day.",
+      true
+    );
+    return;
+  }
+  if (resource.status !== "available") {
+    showbookingmessage(escapehtml(resource.name) + " is not currently available for booking.", true);
+    return;
+  }
+
+  const booking = {
+    id: "b" + Date.now(),
+    resourceId: resource.id,
+    requestedBy: requestedby,
+    date: selecteddate,
+    startTime: starttime,
+    endTime: endtime,
+    purpose: purpose,
+    status: "pending",
+    createdAt: new Date().toISOString()
+  };
+
+  const bookings = getBookings();
+  bookings.push(booking);
+  // Save first so the conflict check also sees the request that was just made.
+  saveBookings(bookings);
+  addAuditEntry(requestedby, "booking_requested", "Requested booking of " + resource.name + " on " + selecteddate);
+
+  const conflict = hasconflict(booking, bookings);
+  const bookeddate = selecteddate;
+  renderdetailpanel();
+  showbookingmessage(
+    conflict
+      ? "Booking request for " + bookeddate + " submitted as pending. Note: this time overlaps with another booking, so it may need staff review."
+      : "Booking request for " + bookeddate + " submitted and is pending approval.",
+    conflict
+  );
+}
+
+function choosecalendarday(datestring) {
+  selecteddate = datestring;
+  const label = document.getElementById("selecteddatelabel");
+  if (label) {
+    label.textContent = datestring;
+  }
+  refreshcalendarandlist();
 }
 
 function renderbookinglist(bookings) {
@@ -197,27 +322,41 @@ function renderbookinglist(bookings) {
         "–" +
         b.endTime +
         " &mdash; " +
-        b.purpose +
+        escapehtml(b.purpose) +
         "</li>"
       );
     })
     .join("");
 }
 
-function rendercalendar(bookings) {
+function rendercalendar(bookings, resourceid) {
   const container = document.getElementById("calendarcontainer");
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const shown = new Date(today.getFullYear(), today.getMonth() + calendaroffset, 1);
+  const year = shown.getFullYear();
+  const month = shown.getMonth();
+  const todaydate = todaystring();
+  const bookable = selectedresource().status === "available";
 
   const bookeddates = {};
   bookings.forEach(function (b) {
     bookeddates[b.date] = true;
   });
 
-  const firstday = new Date(year, month, 1);
+  const closures = getClosures().filter(function (c) {
+    return c.resourceId === resourceid;
+  });
+  // Maintenance has no end date, so an unresolved task marks every day from the day it was reported.
+  const maintenancestarts = getMaintenanceTasks()
+    .filter(function (t) {
+      return t.resourceId === resourceid && t.status !== "resolved";
+    })
+    .map(function (t) {
+      return t.createdAt.slice(0, 10);
+    });
+
   const daysinmonth = new Date(year, month + 1, 0).getDate();
-  const startweekday = firstday.getDay();
+  const startweekday = new Date(year, month, 1).getDay();
   const monthnames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -235,26 +374,67 @@ function rendercalendar(bookings) {
   }
 
   for (let day = 1; day <= daysinmonth; day++) {
-    const mm = String(month + 1).padStart(2, "0");
-    const dd = String(day).padStart(2, "0");
-    const datestring = year + "-" + mm + "-" + dd;
-    const isbooked = bookeddates[datestring] ? "booked" : "";
-    const istoday = datestring === todaystring() ? "today" : "";
-    cellshtml += '<div class="calendarday ' + isbooked + " " + istoday + '">' + day + "</div>";
+    const datestring = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+    const isclosed = closures.some(function (c) {
+      return c.startDate <= datestring && c.endDate >= datestring;
+    });
+    const ismaintenance = maintenancestarts.some(function (start) {
+      return start <= datestring;
+    });
+    const ispast = datestring < todaydate;
+    const selectable = bookable && !ispast && !isclosed && !ismaintenance;
+
+    // Closed wins over maintenance, and both win over the plain booked colour.
+    const classes = ["calendarday"];
+    if (bookeddates[datestring]) classes.push("booked");
+    if (isclosed) classes.push("closed");
+    else if (ismaintenance) classes.push("maintenance");
+    if (ispast) classes.push("past");
+    if (selectable) classes.push("selectable");
+    if (datestring === todaydate) classes.push("today");
+    if (datestring === selecteddate) classes.push("selected");
+
+    const title = isclosed ? "Closed" : ismaintenance ? "Under maintenance" : ispast ? "Past" : bookeddates[datestring] ? "Booked (you can still request this day)" : "Available";
+    cellshtml +=
+      '<div class="' + classes.join(" ") + '" title="' + title + '"' + (selectable ? ' data-date="' + datestring + '"' : "") + ">" + day + "</div>";
   }
 
   container.innerHTML =
-    '<div class="calendarheader"><h3>' +
-    monthnames[month] +
-    " " +
-    year +
-    "</h3></div>" +
+    '<div class="calendarheader">' +
+    '<button type="button" class="btn btnsecondary" id="calprev"' + (calendaroffset === 0 ? " disabled" : "") + ">&lsaquo; Prev</button>" +
+    "<h3>" + monthnames[month] + " " + year + "</h3>" +
+    '<button type="button" class="btn btnsecondary" id="calnext">Next &rsaquo;</button>' +
+    "</div>" +
     '<div class="calendargrid">' +
     cellshtml +
+    "</div>" +
+    '<div class="calendarlegend">' +
+    '<span><i class="legendswatch closed"></i>Closed</span>' +
+    '<span><i class="legendswatch maintenance"></i>Under maintenance</span>' +
+    '<span><i class="legendswatch booked"></i>Booked</span>' +
+    '<span><i class="legendswatch selected"></i>Selected day</span>' +
     "</div>";
+
+  container.querySelectorAll("[data-date]").forEach(function (cell) {
+    cell.addEventListener("click", function () {
+      choosecalendarday(cell.getAttribute("data-date"));
+    });
+  });
+  document.getElementById("calprev").addEventListener("click", function () {
+    calendaroffset = Math.max(0, calendaroffset - 1);
+    refreshcalendarandlist();
+  });
+  document.getElementById("calnext").addEventListener("click", function () {
+    calendaroffset += 1;
+    refreshcalendarandlist();
+  });
 }
 
 function initfacilitiespage() {
+  const wanted = new URLSearchParams(window.location.search).get("resource");
+  if (wanted) {
+    selectedresourceid = wanted;
+  }
   populatelocations();
   renderresourcelist();
   renderdetailpanel();

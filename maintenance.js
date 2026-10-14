@@ -95,6 +95,7 @@ function maintenancestatuslabel(status) {
 function populatemaintenanceresourceoptions() {
   const select = document.getElementById("resourceselect");
   const resources = getResources();
+  select.innerHTML = "";
 
   const placeholder = document.createElement("option");
   placeholder.value = "";
@@ -171,10 +172,10 @@ function rendermyreports() {
       return (
         "<tr>" +
         "<td>" +
-        resourcename(t.resourceId) +
+        escapehtml(resourcename(t.resourceId)) +
         "</td>" +
         "<td>" +
-        t.description +
+        escapehtml(t.description) +
         "</td>" +
         "<td>" +
         prioritylabel(t.priority) +
@@ -231,10 +232,10 @@ function rendertaskqueue() {
       return (
         "<tr>" +
         "<td>" +
-        resourcename(t.resourceId) +
+        escapehtml(resourcename(t.resourceId)) +
         "</td>" +
         "<td>" +
-        t.description +
+        escapehtml(t.description) +
         "</td>" +
         "<td>" +
         prioritylabel(t.priority) +
@@ -245,7 +246,7 @@ function rendertaskqueue() {
         maintenancestatuslabel(t.status) +
         "</span></td>" +
         "<td>" +
-        (t.assignedTo ? t.assignedTo : "—") +
+        (t.assignedTo ? escapehtml(t.assignedTo) : "—") +
         "</td>" +
         "<td>" +
         actionshtml +

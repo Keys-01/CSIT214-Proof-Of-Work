@@ -86,7 +86,7 @@ function defaultResources() {
   return [
     {
       id: "r1",
-      name: "Riverside Community Hall",
+      name: "CoastLink Community Hall",
       type: "facility",
       location: "12 River St",
       capacity: 150,
@@ -133,7 +133,7 @@ function defaultResources() {
       id: "r6",
       name: "Tennis Court 2",
       type: "facility",
-      location: "Riverside Sports Complex",
+      location: "CoastLink Sports Complex",
       capacity: 4,
       description: "Outdoor hard-court tennis court, lights available after dark.",
       status: "available"
@@ -244,7 +244,7 @@ function defaultAuditLog() {
       timestamp: "2026-09-20T09:15:00",
       actor: "Council Staff",
       action: "booking_approved",
-      details: "Approved booking b1 for Riverside Community Hall"
+      details: "Approved booking b1 for CoastLink Community Hall"
     },
     {
       id: "a2",
@@ -303,13 +303,61 @@ function addAuditEntry(actor, action, details) {
   writejson(STORAGEKEYS.auditLog, log);
 }
 
+function escapehtml(value) {
+  return String(value === null || typeof value === "undefined" ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function overlaps(a, b) {
+  // Times are stored as HH:MM, so string comparison works in chronological order.
+  return a.resourceId === b.resourceId && a.date === b.date && a.startTime < b.endTime && b.startTime < a.endTime;
+}
+
+function hasconflict(booking, allbookings) {
+  return allbookings.some(function (other) {
+    if (other.id === booking.id) {
+      return false;
+    }
+    if (other.status !== "approved" && other.status !== "pending") {
+      return false;
+    }
+    return overlaps(booking, other);
+  });
+}
+
+// Returns the closure covering this resource on this date (YYYY-MM-DD), or undefined.
+function findclosureondate(resourceid, date) {
+  return getClosures().filter(function (c) {
+    return c.resourceId === resourceid && c.startDate <= date && c.endDate >= date;
+  })[0];
+}
+
 function getRole() {
   return localStorage.getItem(STORAGEKEYS.role) || "community";
 }
 
+// Staff-only pages call this first; members see a notice instead of the page.
+function blockifnotstaff() {
+  if (getRole() === "staff") {
+    return false;
+  }
+  const container = document.querySelector("main .container");
+  if (container) {
+    container.innerHTML =
+      "<h1>Council staff only</h1>" +
+      '<p class="subtitle">This page is only available to Council Staff.</p>' +
+      '<p><a class="btn btnprimary" href="index.html">Back to dashboard</a></p>';
+  }
+  return true;
+}
+
 function setRole(role) {
   localStorage.setItem(STORAGEKEYS.role, role);
-  syncStateToBackend();
+  return syncStateToBackend();
 }
 
 function isactiveclosure(closure, today) {
@@ -326,7 +374,8 @@ function refreshallresourcestatuses() {
   const resources = getResources();
   const closures = getClosures();
   const maintenanceTasks = getMaintenanceTasks();
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
 
   resources.forEach(function (resource) {
     const isclosed = closures.some(function (closure) {

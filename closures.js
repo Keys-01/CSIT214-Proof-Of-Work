@@ -191,7 +191,7 @@ function renderclosures() {
       return (
         "<tr>" +
         "<td>" +
-        resourcename(c.resourceId) +
+        escapehtml(resourcename(c.resourceId)) +
         "</td>" +
         "<td>" +
         c.startDate +
@@ -199,14 +199,14 @@ function renderclosures() {
         c.endDate +
         "</td>" +
         "<td>" +
-        c.reason +
+        escapehtml(c.reason) +
         "</td>" +
         "<td>" +
         c.affectedBookingIds.length +
         "</td>" +
         "<td>" +
         '<button type="button" class="btn btnsecondary" data-reopen="' +
-        c.resourceId +
+        c.id +
         '">Reopen resource</button>' +
         "</td>" +
         "</tr>"
@@ -216,7 +216,7 @@ function renderclosures() {
 
   body.querySelectorAll("[data-reopen]").forEach(function (button) {
     button.addEventListener("click", function () {
-      reopenresource(button.getAttribute("data-reopen"));
+      reopenclosure(button.getAttribute("data-reopen"));
     });
   });
 }
@@ -253,10 +253,10 @@ function renderaffectedbookings() {
       return (
         "<tr>" +
         "<td>" +
-        resourcename(b.resourceId) +
+        escapehtml(resourcename(b.resourceId)) +
         "</td>" +
         "<td>" +
-        b.requestedBy +
+        escapehtml(b.requestedBy) +
         "</td>" +
         "<td>" +
         b.date +
@@ -286,9 +286,18 @@ function renderaffectedbookings() {
   });
 }
 
-function reopenresource(resourceid) {
+function reopenclosure(closureid) {
+  const target = getClosures().filter(function (closure) {
+    return closure.id === closureid;
+  })[0];
+  if (!target) {
+    return;
+  }
+  const resourceid = target.resourceId;
+
+  // Only the chosen closure is removed; other closures for the resource stay scheduled.
   const remainingclosures = getClosures().filter(function (closure) {
-    return closure.resourceId !== resourceid;
+    return closure.id !== closureid;
   });
 
   saveClosures(remainingclosures);
@@ -302,7 +311,7 @@ function reopenresource(resourceid) {
   });
 
   setresourcestatus(resourceid, hasactiveclosure ? "closed" : hasopenmaintenance ? "maintenance" : "available");
-  addAuditEntry("Council Staff", "resource_reopened", "Reopened " + resourcename(resourceid) + " after closure");
+  addAuditEntry("Council Staff", "resource_reopened", "Ended closure (" + target.startDate + " to " + target.endDate + ") of " + resourcename(resourceid));
   renderallclosureviews();
 }
 
@@ -326,6 +335,9 @@ function renderallclosureviews() {
 }
 
 function initclosurespage() {
+  if (blockifnotstaff()) {
+    return;
+  }
   populateclosureresourceoptions();
   renderallclosureviews();
   document.getElementById("closureform").addEventListener("submit", handleclosuresubmit);

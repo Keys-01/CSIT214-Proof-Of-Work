@@ -13,7 +13,7 @@ const defaultState = {
   resources: [
     {
       id: 'r1',
-      name: 'Riverside Community Hall',
+      name: 'CoastLink Community Hall',
       type: 'facility',
       location: '12 River St',
       capacity: 150,
@@ -45,7 +45,7 @@ const defaultState = {
       location: 'Council Administration Building',
       capacity: 20,
       description: 'Medium meeting room, suitable for workshops.',
-      status: 'available'
+      status: 'maintenance'
     },
     {
       id: 'r5',
@@ -60,7 +60,7 @@ const defaultState = {
       id: 'r6',
       name: 'Tennis Court 2',
       type: 'facility',
-      location: 'Riverside Sports Complex',
+      location: 'CoastLink Sports Complex',
       capacity: 4,
       description: 'Outdoor hard-court tennis court, lights available after dark.',
       status: 'available'
@@ -119,7 +119,7 @@ const defaultState = {
       reportedBy: 'Council Staff',
       description: 'Air conditioning unit not cooling, room too warm for use.',
       priority: 'high',
-      status: 'resolved',
+      status: 'assigned',
       assignedTo: 'Dave Whitfield',
       createdAt: '2026-09-25T14:00:00'
     },
@@ -129,8 +129,8 @@ const defaultState = {
       reportedBy: 'Jamie Lee',
       description: 'One microphone has a loose connector, crackles intermittently.',
       priority: 'medium',
-      status: 'resolved',
-      assignedTo: 'Dave Whitfield',
+      status: 'reported',
+      assignedTo: null,
       createdAt: '2026-09-27T10:20:00'
     }
   ],
@@ -139,7 +139,7 @@ const defaultState = {
       id: 'c1',
       resourceId: 'r4',
       startDate: '2026-09-24',
-      endDate: '2026-10-01',
+      endDate: '2026-10-08',
       reason: 'Air conditioning repair',
       affectedBookingIds: [],
       createdAt: '2026-09-25T14:05:00'
@@ -151,7 +151,7 @@ const defaultState = {
       timestamp: '2026-09-20T09:15:00',
       actor: 'Council Staff',
       action: 'booking_approved',
-      details: 'Approved booking b1 for Riverside Community Hall'
+      details: 'Approved booking b1 for CoastLink Community Hall'
     },
     {
       id: 'a2',
@@ -207,7 +207,7 @@ export function writeData(state) {
 }
 
 export function resetData() {
-  writeData(defaultState);
+  return writeData(structuredClone(defaultState));
 }
 
 export const app = express();
@@ -250,6 +250,17 @@ app.post('/api/bookings', (req, res) => {
   }
 
   const state = readData();
+  const resource = state.resources.find((r) => r.id === booking.resourceId);
+  if (!resource || resource.status !== 'available') {
+    return res.status(409).json({ message: 'This resource is not available for booking.' });
+  }
+  const closure = state.closures.find(
+    (c) => c.resourceId === booking.resourceId && c.startDate <= booking.date && c.endDate >= booking.date
+  );
+  if (closure) {
+    return res.status(409).json({ message: `This resource is closed from ${closure.startDate} to ${closure.endDate}.` });
+  }
+
   const nextBooking = {
     id: booking.id || `b${Date.now()}`,
     resourceId: booking.resourceId,
@@ -294,6 +305,11 @@ app.post('/api/closures', (req, res) => {
   res.status(201).json(written.closures[written.closures.length - 1]);
 });
 
+app.post('/api/reset', (req, res) => {
+  const state = resetData();
+  res.status(200).json(state);
+});
+
 app.get('/api/:collection', (req, res) => {
   const key = collectionMap[req.params.collection];
   if (!key) {
@@ -322,11 +338,6 @@ app.post('/api/:collection', (req, res) => {
   res.status(201).json(written[key]);
 });
 
-app.post('/api/reset', (req, res) => {
-  const state = resetData();
-  res.status(200).json(state);
-});
-
 const staticDir = __dirname;
 app.use(express.static(staticDir));
 
@@ -349,7 +360,7 @@ app.get('*', (req, res, next) => {
 
 export function startServer(port = Number(process.env.PORT || 3001)) {
   return app.listen(port, () => {
-    console.log(`Riverbend Council backend running at http://localhost:${port}`);
+    console.log(`CoastLink Council backend running at http://localhost:${port}`);
   });
 }
 
