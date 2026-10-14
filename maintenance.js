@@ -204,30 +204,25 @@ function rendertaskqueue() {
 
   body.innerHTML = tasks
     .map(function (t) {
-      let actionshtml = "";
-      if (t.status === "reported") {
-        actionshtml =
-          '<select data-assignselect="' +
-          t.id +
-          '">' +
-          STAFFMEMBERS.map(function (name) {
-            return '<option value="' + name + '">' + name + "</option>";
-          }).join("") +
-          "</select> " +
-          '<button type="button" class="btn btnprimary" data-assign="' +
-          t.id +
-          '">Assign</button>';
-      } else if (t.status === "assigned") {
-        actionshtml =
-          '<button type="button" class="btn btnsecondary" data-start="' +
-          t.id +
-          '">Start work</button> ' +
-          '<button type="button" class="btn btnprimary" data-resolve="' +
-          t.id +
-          '">Mark resolved</button>';
-      } else if (t.status === "in_progress") {
-        actionshtml = '<button type="button" class="btn btnprimary" data-resolve="' + t.id + '">Mark resolved</button>';
-      }
+      const statusoptions = [
+        ["reported", "Reported"],
+        ["assigned", "Assigned"],
+        ["in_progress", "In progress"],
+        ["resolved", "Resolved"]
+      ]
+        .map(function (pair) {
+          return '<option value="' + pair[0] + '"' + (t.status === pair[0] ? " selected" : "") + ">" + pair[1] + "</option>";
+        })
+        .join("");
+      const staffoptions =
+        '<option value="">Assign to…</option>' +
+        STAFFMEMBERS.map(function (name) {
+          return '<option value="' + escapehtml(name) + '"' + (t.assignedTo === name ? " selected" : "") + ">" + escapehtml(name) + "</option>";
+        }).join("");
+      const actionshtml =
+        '<select data-statusselect="' + t.id + '" aria-label="Status">' + statusoptions + "</select> " +
+        '<select data-assigneeselect="' + t.id + '" aria-label="Assigned to">' + staffoptions + "</select> " +
+        '<button type="button" class="btn btnprimary" data-update="' + t.id + '">Update</button>';
 
       return (
         "<tr>" +
@@ -256,26 +251,17 @@ function rendertaskqueue() {
     })
     .join("");
 
-  body.querySelectorAll("[data-assign]").forEach(function (button) {
+  body.querySelectorAll("[data-update]").forEach(function (button) {
     button.addEventListener("click", function () {
-      const id = button.getAttribute("data-assign");
-      const select = body.querySelector('[data-assignselect="' + id + '"]');
-      assigntask(id, select.value);
-    });
-  });
-  body.querySelectorAll("[data-start]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      starttask(button.getAttribute("data-start"));
-    });
-  });
-  body.querySelectorAll("[data-resolve]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      resolvetask(button.getAttribute("data-resolve"));
+      const id = button.getAttribute("data-update");
+      const status = body.querySelector('[data-statusselect="' + id + '"]').value;
+      const assignee = body.querySelector('[data-assigneeselect="' + id + '"]').value;
+      updatetaskstatus(id, status, assignee);
     });
   });
 }
 
-function assigntask(id, assignedto) {
+function updatetaskstatus(id, status, assignee) {
   const tasks = getMaintenanceTasks();
   const task = tasks.filter(function (t) {
     return t.id === id;
@@ -283,41 +269,29 @@ function assigntask(id, assignedto) {
   if (!task) {
     return;
   }
-  task.status = "assigned";
-  task.assignedTo = assignedto;
-  saveMaintenanceTasks(tasks);
-  updateResourceMaintenanceStatus(task.resourceId);
-  addAuditEntry("Council Staff", "maintenance_assigned", "Assigned task for " + resourcename(task.resourceId) + " to " + assignedto);
-  renderallmaintenanceviews();
-}
 
-function starttask(id) {
-  const tasks = getMaintenanceTasks();
-  const task = tasks.filter(function (t) {
-    return t.id === id;
-  })[0];
-  if (!task) {
+  // Anything past "reported" needs someone responsible for the work.
+  if (status !== "reported" && !assignee) {
+    showmaintenancemessage("Choose who the task is assigned to before setting it to " + maintenancestatuslabel(status).toLowerCase() + ".", true);
     return;
   }
-  task.status = "in_progress";
-  saveMaintenanceTasks(tasks);
-  updateResourceMaintenanceStatus(task.resourceId);
-  addAuditEntry("Council Staff", "maintenance_started", "Started work on task for " + resourcename(task.resourceId));
-  renderallmaintenanceviews();
-}
-
-function resolvetask(id) {
-  const tasks = getMaintenanceTasks();
-  const task = tasks.filter(function (t) {
-    return t.id === id;
-  })[0];
-  if (!task) {
+  if (status === task.status && (assignee || null) === (task.assignedTo || null)) {
+    showmaintenancemessage("Nothing to update: the status and assignee are unchanged.", true);
     return;
   }
-  task.status = "resolved";
+
+  const oldstatus = task.status;
+  task.status = status;
+  task.assignedTo = status === "reported" ? null : assignee;
   saveMaintenanceTasks(tasks);
+  // Moving a task to or from "resolved" changes whether the resource is under maintenance.
   updateResourceMaintenanceStatus(task.resourceId);
-  addAuditEntry("Council Staff", "maintenance_resolved", "Resolved task for " + resourcename(task.resourceId));
+  addAuditEntry(
+    "Council Staff",
+    "maintenance_status_changed",
+    "Report for " + resourcename(task.resourceId) + " changed from " + maintenancestatuslabel(oldstatus) + " to " + maintenancestatuslabel(status) + (task.assignedTo ? " (assigned to " + task.assignedTo + ")" : "")
+  );
+  showmaintenancemessage("Report updated to " + maintenancestatuslabel(status).toLowerCase() + ".", false);
   renderallmaintenanceviews();
 }
 
