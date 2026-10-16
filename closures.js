@@ -235,9 +235,13 @@ function renderaffectedbookings() {
     });
   });
 
-  const affectedbookings = bookings.filter(function (b) {
-    return affectedids.indexOf(b.id) !== -1;
-  });
+  const affectedbookings = bookings
+    .filter(function (b) {
+      return affectedids.indexOf(b.id) !== -1;
+    })
+    .sort(function (a, b) {
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
   if (affectedbookings.length === 0) {
     body.innerHTML = '<tr><td colspan="6" class="emptystate">No bookings are affected by a closure.</td></tr>';

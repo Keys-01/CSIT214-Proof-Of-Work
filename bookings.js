@@ -87,9 +87,13 @@ function rendermybookings() {
 function renderapprovals() {
   const body = document.getElementById("approvalsbody");
   const allbookings = getBookings();
-  const pending = allbookings.filter(function (b) {
-    return b.status === "pending";
-  });
+  const pending = allbookings
+    .filter(function (b) {
+      return b.status === "pending";
+    })
+    .sort(function (a, b) {
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
   if (pending.length === 0) {
     body.innerHTML = '<tr><td colspan="6" class="emptystate">No bookings awaiting approval.</td></tr>';

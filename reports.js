@@ -9,6 +9,10 @@ function renderaudittable() {
     const haystack = (entry.actor + " " + entry.action + " " + entry.details).toLowerCase();
     return haystack.indexOf(search) !== -1;
   });
+  // Newest first, whatever order the entries were stored in.
+  entries.sort(function (a, b) {
+    return b.timestamp.localeCompare(a.timestamp);
+  });
 
   // Search the combined row text so users can find an actor, action, or detail in one box.
   if (entries.length === 0) {
